@@ -24,7 +24,11 @@ mkdir -p /opt/docker-compose
 cd /opt/docker-compose
 git clone https://github.com/ernestgwilsonii/docker-raspberry-pi-tick.git
 cd docker-raspberry-pi-tick
-./lazy.sh
+# ./lazy.sh
+# if manager node:
+./init-master.sh
+# if worker node:
+./init-node.sh
 docker stack deploy -c docker-compose.yml tick-stack
 docker stack ls
 docker service ls
