@@ -77,10 +77,10 @@ services:
       - tick-stack-net1
     volumes:
       - type: bind
-        source: /clusterfs/influxdb
+        source: /clusterfs/influxdb/etc/influxdb
         target: /etc/influxdb
       - type: bind
-        source: /clusterfs/influxdb
+        source: /clusterfs/influxdb/var/lib/influxdb
         target: /var/lib/influxdb
     deploy:
       labels:
