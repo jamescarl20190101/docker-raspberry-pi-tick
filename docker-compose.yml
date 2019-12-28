@@ -12,6 +12,7 @@ services:
       - HOST_PROC=/host/proc
       - HOST_SYS=/host/sys
       - INFLUX_URL=http://influxdb:8086
+      - HOST_IP=172.21.10.101
     ports:
       # Telegraf unencrypted UDP 8092
       - mode: host
