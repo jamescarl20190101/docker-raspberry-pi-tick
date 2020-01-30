@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+#extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+#      serviceAccountName: telegraf-ds
+      containers:
+      - name: {{ template "fullname" . }}
+        image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ default "" .Values.image.pullPolicy | quote }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        env:
+        # This pulls HOSTNAME from the node, not the pod.
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        # In test clusters where hostnames are resolved in /etc/hosts on each node,
+        # the HOSTNAME is not resolvable from inside containers
+        # So inject the host IP as well
+        - name: HOSTIP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: "HOST_PROC"
+          value: "/host/proc"
+        - name: "HOST_SYS"
+          value: "/host/sys"
+        - name: "HOST_ETC"
+          value: "/host/etc"
+        - name: "INFLUX_URL"
+          value: "{{ .Values.influx_url }}"
+        volumeMounts:
+        - name: varrunutmpro
+          mountPath: /var/run/utmp
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: etc
+          mountPath: /host/etc
+          readOnly: true
+
+        - name: docker
+          mountPath: /var/run/docker.sock
+        - name: conf
+          mountPath: /etc/telegraf
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+      volumes:
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: docker
+        hostPath:
+          path: /var/run/docker.sock
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: varrunutmpro
+        hostPath:
+          path: /var/run/utmp
+      - name: etc
+        hostPath:
+          path: /etc
+      - name: conf
+        hostPath:
+          path: /clusterfs/K3SPV/telegraf
+#        configMap:
+#          name: {{ template "fullname" . }}
